@@ -1,0 +1,54 @@
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --border-color: #334155;
+    --accent-cyan: #38bdf8;
+}
+
+body.bg-dark-custom {
+    background-color: var(--bg-dark) !important;
+    font-family: 'Inter', sans-serif;
+    color: #cbd5e1;
+}
+
+.bg-dark-custom {
+    background-color: var(--bg-dark) !important;
+}
+
+.bg-card-dark {
+    background-color: var(--bg-card) !important;
+}
+
+.hero-dark-section {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: var(--border-color) !important;
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text; /* Menambahkan properti standar untuk menghilangkan warning */
+    -webkit-text-fill-color: transparent;
+}
+
+.feature-card-dark {
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card-dark:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-cyan) !important;
+    box-shadow: 0 1rem 2rem rgba(56, 189, 248, 0.15);
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.hover-border-info:hover {
+    border-color: var(--accent-cyan) !important;
+}
+
+.fw-mono {
+    font-family: monospace;
+}
