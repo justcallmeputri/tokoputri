@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_produk'])) {
     }
 }
 
-// 2. PROSES EDIT BARANG KATALOG (Termasuk Barcode)
+// 2. PROSES EDIT BARANG KATALOG
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_produk'])) {
     $id_produk = (int) $_POST['id_produk'];
     $nama_produk = trim($_POST['nama_produk']);
@@ -216,19 +216,26 @@ try {
                             <div class="col-md-6 item-card-wrapper" data-nama="<?= strtolower(htmlspecialchars($prod['nama_produk'] . ' ' . $prod['barcode'])) ?>">
                                 <div class="produk-item bg-white p-3 h-100 d-flex flex-column justify-content-between">
                                     <div style="cursor: pointer;" onclick="tambahKeKeranjang(<?= $prod['id_produk'] ?>, '<?= htmlspecialchars(addslashes($prod['nama_produk'])) ?>', <?= $prod['harga'] ?>, <?= $prod['stok'] ?>)">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <h6 class="fw-bold mb-1"><?= htmlspecialchars($prod['nama_produk']) ?></h6>
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="fw-bold mb-0"><?= htmlspecialchars($prod['nama_produk']) ?></h6>
                                             <span class="badge <?= $prod['stok'] > 0 ? 'bg-light text-dark border' : 'bg-danger text-white' ?>">
                                                 Stok: <?= $prod['stok'] ?>
                                             </span>
                                         </div>
+
+                                        <!-- Render Gambar Barcode Produk -->
                                         <?php if (!empty($prod['barcode'])): ?>
-                                            <div class="text-muted small mb-1 font-monospace">🏷️ <?= htmlspecialchars($prod['barcode']) ?></div>
+                                            <div class="my-1 py-1 bg-light rounded text-center border-0">
+                                                <img src="https://barcode.tec-it.com/barcode.ashx?data=<?= urlencode($prod['barcode']) ?>&code=Code128&dpi=96&datamode=Default" alt="Barcode <?= $prod['barcode'] ?>" style="height: 24px; max-width: 100%;">
+                                                <div style="font-size: 7.5px; font-family: monospace; color: #555;"><?= htmlspecialchars($prod['barcode']) ?></div>
+                                            </div>
                                         <?php endif; ?>
+
                                         <div class="fw-bold mt-1" style="color: #0284c7;">
                                             Rp <?= number_format($prod['harga'], 0, ',', '.') ?>
                                         </div>
                                     </div>
+
                                     <!-- Tombol Aksi Edit & Hapus Produk -->
                                     <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                                         <span class="small text-muted" style="cursor: pointer;" onclick="tambahKeKeranjang(<?= $prod['id_produk'] ?>, '<?= htmlspecialchars(addslashes($prod['nama_produk'])) ?>', <?= $prod['harga'] ?>, <?= $prod['stok'] ?>)">+ Klik beli</span>
@@ -261,7 +268,7 @@ try {
                             </select>
                         </div>
 
-                        <!-- Tabel Keranjang Otomatis -->
+                        <!-- Tabel Keranjang Otomatis dengan Tombol Tambah/Kurang Qty -->
                         <div class="bg-white rounded-3 border p-2 mb-3" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm align-middle mb-0">
                                 <thead class="table-light small">
@@ -316,12 +323,12 @@ try {
                 <form action="" method="POST">
                     <div class="modal-body p-4">
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Barang</label>
-                            <input type="text" class="form-control" name="nama_produk" required placeholder="Contoh: Kopi Susu Botol 250ml">
+                            <label class="form-label small fw-semibold">Barcode / SKU (Scan atau Ketik)</label>
+                            <input type="text" class="form-control font-monospace" name="barcode" id="inputBarcodeScan" placeholder="Klik lalu scan barcode pada produk..." autocomplete="off" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Barcode / SKU</label>
-                            <input type="text" class="form-control font-monospace" name="barcode" placeholder="Contoh: 8991234567890">
+                            <label class="form-label small fw-semibold">Nama Barang</label>
+                            <input type="text" class="form-control" name="nama_produk" required placeholder="Contoh: Kopi Susu Botol 250ml">
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Harga Satuan (Rp)</label>
@@ -341,7 +348,7 @@ try {
         </div>
     </div>
 
-    <!-- MODAL EDIT BARANG (Dengan Barcode) -->
+    <!-- MODAL EDIT BARANG -->
     <div class="modal fade" id="modalEditBarang" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow">
@@ -353,12 +360,12 @@ try {
                     <div class="modal-body p-4">
                         <input type="hidden" name="id_produk" id="editIdProduk">
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Barang</label>
-                            <input type="text" class="form-control" name="nama_produk" id="editNamaProduk" required>
+                            <label class="form-label small fw-semibold">Barcode / SKU</label>
+                            <input type="text" class="form-control font-monospace" name="barcode" id="editBarcode" autocomplete="off" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Barcode / SKU</label>
-                            <input type="text" class="form-control font-monospace" name="barcode" id="editBarcode" placeholder="Contoh: 8991234567890">
+                            <label class="form-label small fw-semibold">Nama Barang</label>
+                            <input type="text" class="form-control" name="nama_produk" id="editNamaProduk" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Harga Satuan (Rp)</label>
@@ -404,11 +411,30 @@ try {
                     id_produk: id,
                     nama_produk: nama,
                     harga: harga,
+                    stok: stok,
                     qty: 1,
                     subtotal: harga
                 });
             }
             renderKeranjang();
+        }
+
+        // Fungsi mengubah kuantitas (+ atau -) langsung di keranjang
+        function ubahQty(index, delta) {
+            const item = keranjang[index];
+            const newQty = item.qty + delta;
+
+            if (newQty <= 0) {
+                hapusItem(index);
+            } else {
+                if (delta > 0 && newQty > item.stok) {
+                    alert('Jumlah melebihi stok tersedia (' + item.stok + ')!');
+                    return;
+                }
+                item.qty = newQty;
+                item.subtotal = item.qty * item.harga;
+                renderKeranjang();
+            }
         }
 
         function hapusItem(index) {
@@ -429,9 +455,15 @@ try {
                     tbody.innerHTML += `
                         <tr>
                             <td class="small fw-semibold">${item.nama_produk}<br><span class="text-muted fw-normal">${formatRupiah(item.harga)}</span></td>
-                            <td class="text-center small fw-bold">${item.qty}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary px-1 py-0" onclick="ubahQty(${idx}, -1)">-</button>
+                                    <span class="px-2 fw-bold small">${item.qty}</span>
+                                    <button type="button" class="btn btn-outline-secondary px-1 py-0" onclick="ubahQty(${idx}, 1)">+</button>
+                                </div>
+                            </td>
                             <td class="text-end small fw-bold">${formatRupiah(item.subtotal)}</td>
-                            <td class="text-end"><button type="button" class="btn btn-sm text-danger p-0" onclick="hapusItem(${idx})">×</button></td>
+                            <td class="text-end"><button type="button" class="btn btn-sm text-danger p-0 fw-bold" onclick="hapusItem(${idx})" title="Hapus item">×</button></td>
                         </tr>
                     `;
                 });
@@ -452,7 +484,13 @@ try {
             el.className = kembali >= 0 ? 'fw-bold text-success' : 'fw-bold text-danger';
         }
 
-        // Fungsi memicu Modal Edit Produk dengan Barcode
+        // Otomatis fokus ke kolom barcode saat modal Tambah Barang dibuka
+        const modalTambah = document.getElementById('modalTambahBarang');
+        modalTambah.addEventListener('shown.bs.modal', function () {
+            document.getElementById('inputBarcodeScan').focus();
+        });
+
+        // Fungsi memicu Modal Edit Produk
         function bukaModalEdit(id, nama, harga, stok, barcode) {
             document.getElementById('editIdProduk').value = id;
             document.getElementById('editNamaProduk').value = nama;
