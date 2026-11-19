@@ -1,4 +1,6 @@
 <?php
+require_once 'cek_akses.php';
+wajibLogin(['admin', 'kasir']);
 require_once 'koneksi.php';
 
 try {

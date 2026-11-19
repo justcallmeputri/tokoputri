@@ -1,0 +1,24 @@
+{
+  "name": "tokokita",
+  "version": "1.0.0",
+  "description": "Sistem manajemen penjualan profesional berkecepatan tinggi berbasis **PHP (PDO)** dan **MariaDB/MySQL**, dirancang khusus untuk kebutuhan operasional kasir ritel dengan integrasi *Stored Procedure*, *Trigger*, *Transaction Control Language (TCL)*, *Hardware Barcode Scanner*, dan *Thermal Receipt Printing*.",
+  "main": "test-duitku.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justcallmeputri/tokoputri.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/justcallmeputri/tokoputri/issues"
+  },
+  "homepage": "https://github.com/justcallmeputri/tokoputri#readme",
+  "dependencies": {
+    "axios": "^1.21.1"
+  }
+}

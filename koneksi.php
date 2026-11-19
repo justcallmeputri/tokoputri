@@ -1,12 +1,13 @@
 <?php
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "db_tokokita";
+$host = 'localhost';
+$user = 'root';
+$pass = '';
+$db   = 'db_tokokita'; // Pastikan nama database ini sama persis di phpMyAdmin
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$database;charset=utf8mb4", $username, $password);$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die("Koneksi Database Gagal: " . $e->getMessage());
+    die("Koneksi gagal: " . $e->getMessage());
 }
 ?>

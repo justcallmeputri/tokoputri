@@ -1,4 +1,6 @@
 <?php
+require_once 'cek_akses.php';
+wajibLogin(['admin', 'kasir']);
 require_once 'koneksi.php';
 
 $pesan = "";
@@ -68,7 +70,7 @@ if (isset($_GET['hapus_id'])) {
     }
 }
 
-// 4. PROSES PEMBAYARAN KASIR DENGAN TCL (COMMIT & ROLLBACK)
+// 4. PROSES PEMBAYARAN KASIR TUNAI DENGAN TCL (COMMIT & ROLLBACK)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proses_transaksi'])) {
     $id_pelanggan = $_POST['id_pelanggan'];
     $total_belanja = (float) $_POST['total_belanja_hidden'];
@@ -119,6 +121,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proses_transaksi'])) 
     }
 }
 
+// Notifikasi redirect dari Duitku atau CRUD
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'duitku_selesai') {
+        $pesan = "Proses pembayaran digital Duitku selesai! Silakan cek status transaksi.";
+        $tipe_pesan = "info";
+    } elseif ($_GET['status'] === 'sukses_tambah') {
+        $pesan = "Barang baru berhasil ditambahkan ke katalog.";
+        $tipe_pesan = "success";
+    } elseif ($_GET['status'] === 'sukses_edit') {
+        $pesan = "Data barang berhasil diperbarui.";
+        $tipe_pesan = "success";
+    } elseif ($_GET['status'] === 'sukses_hapus') {
+        $pesan = "Barang berhasil dihapus dari katalog.";
+        $tipe_pesan = "success";
+    }
+}
+
 // Ambil Data Pelanggan & Daftar Barang
 try {
     $stmtPelanggan = $pdo->query("CALL TampilPelanggan()");
@@ -154,7 +173,7 @@ try {
         .navbar .nav-link.active { font-weight: 700; color: var(--accent-color) !important; }
         .card-custom { background-color: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .card-kasir { background-color: var(--bg-subtle); border: 1px solid #cbd5e1; border-radius: 16px; }
-        .btn-accent { background-color: var(--accent-color); color: #ffffff; font-weight: 600; border-radius: 50px; border: none; }
+        .btn-accent { background-color: var(--accent-color); color: #ffffff; font-weight: 600; border-radius: 50px; border: none; transition: all 0.2s; }
         .btn-accent:hover { background-color: #0369a1; color: #ffffff; }
         .produk-item { border: 1px solid #e2e8f0; border-radius: 12px; transition: all 0.2s; }
         .produk-item:hover { border-color: var(--accent-color); box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12); }
@@ -162,20 +181,33 @@ try {
 </head>
 <body>
 
-    <!-- Navbar -->
+    <!-- Navbar (Dinamis Sesuai Role) -->
     <nav class="navbar navbar-expand-lg sticky-top py-3 shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="<?= ($_SESSION['role'] === 'admin') ? 'index.html' : 'dashboard.php' ?>">
                 <span class="px-2 py-1 bg-dark text-white rounded-2 fs-6 fw-extrabold">TK</span> 
                 <span>Toko<span style="color: #0284c7;">Kita</span> <span class="text-muted fs-7 fw-normal">PRO</span></span>
             </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav align-items-center gap-4">
-                    <li class="nav-item"><a class="nav-link text-muted" href="index.html">Beranda</a></li>
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <li class="nav-item"><a class="nav-link text-muted" href="index.html">Beranda</a></li>
+                    <?php endif; ?>
+
                     <li class="nav-item"><a class="nav-link text-muted" href="dashboard.php">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link text-muted" href="pelanggan.php">Pelanggan</a></li>
                     <li class="nav-item"><a class="nav-link active" href="transaksi.php">Kasir / Transaksi</a></li>
-                    <li class="nav-item"><a class="nav-link text-muted" href="laporan.php">Laporan</a></li>
+
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                        <li class="nav-item"><a class="nav-link text-muted" href="laporan.php">Laporan</a></li>
+                    <?php endif; ?>
+
+                    <li class="nav-item">
+                        <a class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold" href="logout.php">Logout</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -261,11 +293,12 @@ try {
                     <form action="" method="POST" id="formKasir">
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-muted">Pelanggan</label>
-                            <select class="form-select bg-white" name="id_pelanggan" required>
+                            <select class="form-select bg-white" name="id_pelanggan" id="selectPelanggan" required>
                                 <?php foreach ($pelangganList as $p): ?>
-                                    <option value="<?= $p['id_pelanggan'] ?>"><?= htmlspecialchars($p['nama_pelanggan']) ?> (<?= htmlspecialchars($p['kota']) ?>)</option>
+                                    <option value="<?= $p['id_pelanggan'] ?>" data-nama="<?= htmlspecialchars($p['nama_pelanggan']) ?>"><?= htmlspecialchars($p['nama_pelanggan']) ?> (<?= htmlspecialchars($p['kota']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
+                            <input type="hidden" name="nama_pelanggan" id="namaPelangganHidden" value="<?= !empty($pelangganList) ? htmlspecialchars($pelangganList[0]['nama_pelanggan']) : 'Pelanggan Umum' ?>">
                         </div>
 
                         <!-- Tabel Keranjang Otomatis dengan Tombol Tambah/Kurang Qty -->
@@ -290,20 +323,47 @@ try {
                                 <span class="text-muted small fw-semibold">TOTAL BELANJA</span>
                                 <span class="fs-4 fw-bold text-dark" id="tampilTotal">Rp 0</span>
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label small text-muted fw-semibold mb-1">Uang Tunai Diterima (Rp)</label>
-                                <input type="number" class="form-control fw-bold" name="tunai" id="inputTunai" required placeholder="Masukkan nominal bayar" oninput="hitungKembalian()">
+
+                            <!-- TAMBAHAN FITUR: PILIHAN METODE PEMBAYARAN (TUNAI vs DUITKU) -->
+                            <div class="mb-3 pt-2 border-top">
+                                <label class="form-label small text-dark fw-semibold mb-1">Metode Pembayaran</label>
+                                <select class="form-select form-select-sm bg-light fw-semibold" name="metode_pembayaran" id="metodePembayaran" onchange="aturMetodeBayar()">
+                                    <option value="TUNAI">💵 Tunai (Cash)</option>
+                                    <option value="DUITKU">📱 Pembayaran Digital (QRIS / E-Wallet / VA Duitku)</option>
+                                </select>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                <span class="text-muted small fw-semibold">KEMBALIAN</span>
-                                <span class="fw-bold text-success" id="tampilKembalian">Rp 0</span>
+
+                            <!-- SUB-OPSI CHANNEL DUITKU (Tersembunyi jika Tunai) -->
+                            <div id="areaDuitku" class="mb-2 d-none">
+                                <label class="form-label small text-primary fw-semibold mb-1">Pilih Channel Duitku</label>
+                                <select class="form-select form-select-sm border-primary" name="channel_duitku" id="channelDuitku">
+                                    <option value="SP">QRIS (ShopeePay / All E-Wallet & M-Banking)</option>
+                                    <option value="OV">OVO</option>
+                                    <option value="DA">DANA</option>
+                                    <option value="BC">BCA Virtual Account</option>
+                                    <option value="M2">Mandiri Virtual Account</option>
+                                    <option value="I1">BNI Virtual Account</option>
+                                    <option value="BR">BRI Virtual Account</option>
+                                </select>
+                            </div>
+
+                            <!-- AREA PEMBAYARAN TUNAI (Tersembunyi jika Duitku) -->
+                            <div id="areaTunai">
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted fw-semibold mb-1">Uang Tunai Diterima (Rp)</label>
+                                    <input type="number" class="form-control fw-bold" name="tunai" id="inputTunai" required placeholder="Masukkan nominal bayar" oninput="hitungKembalian()">
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="text-muted small fw-semibold">KEMBALIAN</span>
+                                    <span class="fw-bold text-success" id="tampilKembalian">Rp 0</span>
+                                </div>
                             </div>
                         </div>
 
                         <input type="hidden" name="total_belanja_hidden" id="totalBelanjaHidden" value="0">
                         <input type="hidden" name="keranjang_json" id="keranjangJson" value="[]">
 
-                        <button type="submit" name="proses_transaksi" class="btn btn-accent w-100 py-3 shadow-sm fw-bold">
+                        <button type="submit" name="proses_transaksi" id="btnSubmitTransaksi" class="btn btn-accent w-100 py-3 shadow-sm fw-bold">
                             Bayar & Simpan Transaksi (COMMIT)
                         </button>
                     </form>
@@ -419,7 +479,6 @@ try {
             renderKeranjang();
         }
 
-        // Fungsi mengubah kuantitas (+ atau -) langsung di keranjang
         function ubahQty(index, delta) {
             const item = keranjang[index];
             const newQty = item.qty + delta;
@@ -484,13 +543,56 @@ try {
             el.className = kembali >= 0 ? 'fw-bold text-success' : 'fw-bold text-danger';
         }
 
-        // Otomatis fokus ke kolom barcode saat modal Tambah Barang dibuka
+        // FUNGSI PENGATUR METODE PEMBAYARAN (TUNAI vs DUITKU)
+        function aturMetodeBayar() {
+            const metode = document.getElementById('metodePembayaran').value;
+            const areaTunai = document.getElementById('areaTunai');
+            const areaDuitku = document.getElementById('areaDuitku');
+            const inputTunai = document.getElementById('inputTunai');
+            const btnSubmit = document.getElementById('btnSubmitTransaksi');
+            const formKasir = document.getElementById('formKasir');
+
+            if (metode === 'DUITKU') {
+                areaTunai.classList.add('d-none');
+                areaDuitku.classList.remove('d-none');
+                inputTunai.removeAttribute('required');
+                
+                btnSubmit.innerHTML = '💳 Lanjut ke Pembayaran Duitku';
+                btnSubmit.classList.remove('btn-accent');
+                btnSubmit.classList.add('btn-dark');
+                formKasir.setAttribute('action', 'proses_duitku.php');
+            } else {
+                areaTunai.classList.remove('d-none');
+                areaDuitku.classList.add('d-none');
+                inputTunai.setAttribute('required', 'true');
+                
+                btnSubmit.innerHTML = 'Bayar & Simpan Transaksi (COMMIT)';
+                btnSubmit.classList.remove('btn-dark');
+                btnSubmit.classList.add('btn-accent');
+                formKasir.setAttribute('action', '');
+            }
+        }
+
+        // Simpan nama pelanggan ke hidden input saat dropdown pelanggan diganti
+        document.getElementById('selectPelanggan').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            document.getElementById('namaPelangganHidden').value = selectedOption.getAttribute('data-nama');
+        });
+
+        // Validasi keranjang sebelum submit (untuk Tunai maupun Duitku)
+        document.getElementById('formKasir').addEventListener('submit', function(e) {
+            const total = parseFloat(document.getElementById('totalBelanjaHidden').value) || 0;
+            if (keranjang.length === 0 || total <= 0) {
+                e.preventDefault();
+                alert('Keranjang belanja masih kosong! Silakan pilih barang terlebih dahulu.');
+            }
+        });
+
         const modalTambah = document.getElementById('modalTambahBarang');
         modalTambah.addEventListener('shown.bs.modal', function () {
             document.getElementById('inputBarcodeScan').focus();
         });
 
-        // Fungsi memicu Modal Edit Produk
         function bukaModalEdit(id, nama, harga, stok, barcode) {
             document.getElementById('editIdProduk').value = id;
             document.getElementById('editNamaProduk').value = nama;
@@ -502,7 +604,6 @@ try {
             modalEdit.show();
         }
 
-        // Pencarian barang instan berdasarkan nama atau barcode
         document.getElementById('cariBarang').addEventListener('input', function() {
             const kata = this.value.toLowerCase();
             document.querySelectorAll('.item-card-wrapper').forEach(el => {

@@ -1,4 +1,6 @@
 <?php
+require_once 'cek_akses.php';
+wajibLogin(['admin']); // Kasir/pengguna akan otomatis ditolak jika mencoba membuka ini
 require_once 'koneksi.php';
 
 try {
