@@ -1,6 +1,12 @@
 <?php
+session_start();
+// Cek apakah user sudah login dan memiliki role yang diizinkan
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'kasir', 'pengguna'])) {
+    header("Location: login.php");
+    exit();
+}
 require_once 'cek_akses.php';
-wajibLogin(['admin', 'kasir']);
+wajibLogin(['admin', 'kasir', 'pengguna']);
 require_once 'koneksi.php';
 
 $pesan = "";

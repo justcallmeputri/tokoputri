@@ -25,15 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
 
-                // Redirect berdasarkan Role
+                // PERBAIKAN: Redirect berdasarkan Role
                 if ($user['role'] === 'admin') {
                     header("Location: dashboard.php");
                     exit();
                 } elseif ($user['role'] === 'kasir') {
-                    header("Location: dashboard.php"); // Kasir diizinkan akses dashboard, pelanggan, & transaksi
+                    header("Location: dashboard.php"); 
+                    exit();
+                } elseif ($user['role'] === 'pengguna' || $user['role'] === 'user' || $user['role'] === 'pelanggan') {
+                    // Diarahkan langsung ke halaman transaksi untuk akses pengguna
+                    header("Location: transaksi.php");
                     exit();
                 } else {
-                    header("Location: index.html");
+                    // Fallback aman jika role tidak dikenali
+                    header("Location: dashboard.php");
                     exit();
                 }
             } else {
@@ -152,7 +157,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     </div>
 
     <script>
-        // Fitur klik badge demo untuk otomatis mengisi form
         function fillDemo(role) {
             document.getElementById('userInput').value = role;
             document.getElementById('passInput').value = '123456';
